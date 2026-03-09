@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>シフト検索システム</title>
+    <meta name="description" content="スタッフのシフト・勤務パターンを素早く検索できるシステム">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.8);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-blue-glow: rgba(59, 130, 246, 0.3);
+            --accent-purple: #8b5cf6;
+            --accent-purple-glow: rgba(139, 92, 246, 0.3);
+            --accent-emerald: #10b981;
+            --status-work: #10b981;
+            --status-work-bg: rgba(16, 185, 129, 0.15);
+            --status-off: #ef4444;
+            --status-off-bg: rgba(239, 68, 68, 0.15);
+            --status-paid: #f59e0b;
+            --status-paid-bg: rgba(245, 158, 11, 0.15);
+            --status-trip: #8b5cf6;
+            --status-trip-bg: rgba(139, 92, 246, 0.15);
+            --status-other: #6366f1;
+            --status-other-bg: rgba(99, 102, 241, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+            z-index: 0;
+            animation: bgFloat 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgFloat {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-2%, -2%) rotate(3deg); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 20px 16px 40px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 24px 0 32px;
+        }
+
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px var(--accent-blue-glow);
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.02em;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            padding: 4px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(20px);
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: #fff;
+            box-shadow: 0 4px 15px var(--accent-blue-glow);
+        }
+
+        .mode-btn:not(.active):hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            padding: 24px 20px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 16px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-select, .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .form-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        .form-select:focus, .form-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px var(--accent-blue-glow);
+        }
+
+        .form-select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Search Button */
+        .search-btn {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border: none;
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px var(--accent-blue-glow);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 25px var(--accent-blue-glow);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-glass);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Error */
+        .error-msg {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            color: #fca5a5;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        /* Results - Calendar */
+        .results-container {
+            display: none;
+        }
+
+        .results-container.show {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .result-avatar {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .result-info h3 {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .result-info p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Calendar Grid */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .cal-header {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 8px 0;
+        }
+
+        .cal-header.sun { color: #ef4444; }
+        .cal-header.sat { color: #3b82f6; }
+
+        .cal-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 12px;
+            position: relative;
+            min-height: 48px;
+            transition: all 0.2s;
+        }
+
+        .cal-cell.empty {
+            background: transparent;
+        }
+
+        .cal-date {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .cal-status {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .cal-cell.work {
+            background: var(--status-work-bg);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .cal-cell.work .cal-date { color: var(--status-work); }
+        .cal-cell.work .cal-status { color: var(--status-work); }
+
+        .cal-cell.off {
+            background: var(--status-off-bg);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .cal-cell.off .cal-date { color: var(--status-off); }
+        .cal-cell.off .cal-status { color: var(--status-off); }
+
+        .cal-cell.paid {
+            background: var(--status-paid-bg);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .cal-cell.paid .cal-date { color: var(--status-paid); }
+        .cal-cell.paid .cal-status { color: var(--status-paid); }
+
+        .cal-cell.trip {
+            background: var(--status-trip-bg);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        .cal-cell.trip .cal-date { color: var(--status-trip); }
+        .cal-cell.trip .cal-status { color: var(--status-trip); }
+
+        .cal-cell.other-status {
+            background: var(--status-other-bg);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        .cal-cell.other-status .cal-date { color: var(--status-other); }
+        .cal-cell.other-status .cal-status { color: var(--status-other); }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px 6px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            padding: 12px;
+            background: var(--bg-glass);
+            border-radius: var(--radius-sm);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        /* Timetable */
+        .timetable {
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .tt-row {
+            display: flex;
+            border-bottom: 1px solid var(--border-glass);
+            transition: background 0.2s;
+        }
+
+        .tt-row:last-child {
+            border-bottom: none;
+        }
+
+        .tt-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tt-time {
+            width: 70px;
+            min-width: 70px;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+        }
+
+        .tt-task {
+            flex: 1;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tt-task-badge {
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tt-row.has-task {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .tt-row.has-task .tt-time {
+            color: var(--accent-emerald);
+        }
+
+        .tt-row.has-task .tt-task-badge {
+            background: var(--status-work-bg);
+            color: var(--status-work);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .tt-row.no-task .tt-task {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* Pattern info at the top */
+        .pattern-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .pattern-info .label {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .pattern-info .value {
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        /* Day status info */
+        .day-status-info {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .day-status-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .day-status-chip.work {
+            background: var(--status-work-bg);
+            color: var(--status-work);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .day-status-chip.off {
+            background: var(--status-off-bg);
+            color: var(--status-off);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .day-status-chip.paid {
+            background: var(--status-paid-bg);
+            color: var(--status-paid);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        /* Smooth show animation */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px 12px 40px;
+            }
+
+            .header h1 {
+                font-size: 19px;
+            }
+
+            .card {
+                padding: 20px 16px;
+            }
+
+            .cal-cell {
+                min-height: 42px;
+            }
+
+            .cal-date {
+                font-size: 11px;
+            }
+
+            .cal-status {
+                font-size: 8px;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .tt-time {
+                width: 60px;
+                min-width: 60px;
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            .tt-task {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+        }
+
+        /* Date input styling */
+        input[type="date"] {
+            color-scheme: dark;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-icon">📋</div>
+            <h1>シフト検索システム</h1>
+            <p>名前と月・日を選んで勤務パターンを確認</p>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="calendarModeBtn" onclick="switchMode('calendar')">
+                📅 カレンダー
+            </button>
+            <button class="mode-btn" id="timetableModeBtn" onclick="switchMode('timetable')">
+                ⏰ タイムテーブル
+            </button>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-msg" id="errorMsg"></div>
+
+        <!-- Calendar Mode Input -->
+        <div class="card" id="calendarInput">
+            <div class="card-title">🔍 カレンダー検索</div>
+            <div class="form-group">
+                <label class="form-label">対象月</label>
+                <select class="form-select" id="monthSelect" onchange="onMonthChange()">
+                    <option value="">-- 月を選択 --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">スタッフ名</label>
+                <select class="form-select" id="staffSelectCal">
+                    <option value="">-- 先に月を選択してください --</option>
+                </select>
+            </div>
+            <button class="search-btn" id="searchCalBtn" onclick="searchCalendar()">
+                🔍 検索する
+            </button>
+        </div>
+
+        <!-- Timetable Mode Input -->
+        <div class="card" id="timetableInput" style="display:none;">
+            <div class="card-title">🔍 タイムテーブル検索</div>
+            <div class="form-group">
+                <label class="form-label">対象月</label>
+                <select class="form-select" id="monthSelectTT" onchange="onMonthChangeTT()">
+                    <option value="">-- 月を選択 --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">対象日</label>
+                <select class="form-select" id="daySelectTT">
+                    <option value="">-- 先に月を選択してください --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">スタッフ名</label>
+                <select class="form-select" id="staffSelectTT">
+                    <option value="">-- 先に月を選択してください --</option>
+                </select>
+            </div>
+            <button class="search-btn" id="searchTTBtn" onclick="searchTimetable()">
+                🔍 検索する
+            </button>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">データを取得中...</div>
+        </div>
+
+        <!-- Calendar Results -->
+        <div class="results-container" id="calendarResults">
+        </div>
+
+        <!-- Timetable Results -->
+        <div class="results-container" id="timetableResults">
+        </div>
+    </div>
+
+    <script>
+    // =====================================================
+    // スプレッドシートIDマッピング
+    // 新しい月を追加する場合はここにIDを追加するだけ
+    // =====================================================
+    const SPREADSHEET_MAP = {
+        '2504後半': '1Cqvi-pXzR8hu0SggvhsrzR-t8PZ11SJHkQYdjpb_sh4',
+        '2505': '14P1PhXMGmdH8PbqKv8N4C-DcSOVfod6Nc2A_bM9YisU',
+        '2506': '1VNIWBDtOS3iyKGdtzCe1uAX2aQB9psQQfbGzEmujVAw',
+        '2507': '1e-tgb54yjtVhdNep9ZSd9POzjGn-c1cXwXxB-BzzJ7A',
+        '2508': '1QctmyLSsxlPVHk7WwDkNrVdj_Yb79II138SHrqZadCM',
+        '2509': '1uN6BZN9F0u_HxaY1cqWMA1Ul6w5O5YW3hQwDS9GqDOw',
+        '2510': '1EvyrcYMDMnHmspILw6qq2TAorDQP7jsELkzLyIuqA4k',
+        '2511': '1Jv5lNKC7QueIkzOtzOKEDettRxgyPV9OqBH7hQOBHvg',
+        '2512': '1o56u-EQ78IkxwETzegxmYcKyayv5YBsG7Ga-DL6g3Xw',
+        '2601': '1aL5SoFRyW2wYYCcn_bddDIib8rnpSmOAKp6fmT7q7jU',
+        '2602': '11sl9g-_vdNd2X6RfLeawkqWkdF4AtfBcVId2f6aWmDs',
+        '2603': '1yYpFkFt_lB7t9FXrVensTmzSSSOcu-2Xo0huA7CyV-M',
+    };
+
+    // 月表示名のマッピング
+    const MONTH_LABELS = {
+        '2504後半': '2025年4月（後半）',
+        '2505': '2025年5月',
+        '2506': '2025年6月',
+        '2507': '2025年7月',
+        '2508': '2025年8月',
+        '2509': '2025年9月',
+        '2510': '2025年10月',
+        '2511': '2025年11月',
+        '2512': '2025年12月',
+        '2601': '2026年1月',
+        '2602': '2026年2月',
+        '2603': '2026年3月',
+    };
+
+    let currentMode = 'calendar';
+    let cachedStaffNames = {};
+    let cachedSheetNames = {};
+
+    // =====================================================
+    // 初期化
+    // =====================================================
+    function init() {
+        populateMonthSelects();
+    }
+
+    function populateMonthSelects() {
+        const keys = Object.keys(SPREADSHEET_MAP);
+        [document.getElementById('monthSelect'), document.getElementById('monthSelectTT')].forEach(sel => {
+            sel.innerHTML = '<option value="">-- 月を選択 --</option>';
+            keys.forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = MONTH_LABELS[key] || key;
+                sel.appendChild(opt);
+            });
+        });
+    }
+
+    // =====================================================
+    // モード切替
+    // =====================================================
+    function switchMode(mode) {
+        currentMode = mode;
+        document.getElementById('calendarModeBtn').classList.toggle('active', mode === 'calendar');
+        document.getElementById('timetableModeBtn').classList.toggle('active', mode === 'timetable');
+        document.getElementById('calendarInput').style.display = mode === 'calendar' ? 'block' : 'none';
+        document.getElementById('timetableInput').style.display = mode === 'timetable' ? 'block' : 'none';
+        document.getElementById('calendarResults').classList.remove('show');
+        document.getElementById('timetableResults').classList.remove('show');
+        hideError();
+    }
+
+    // =====================================================
+    // Google Sheets API (gviz) データ取得
+    // =====================================================
+    function fetchSheetData(spreadsheetId, sheetName) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'gvizCb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            let url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json;responseHandler:${callbackName}`;
+            if (sheetName) {
+                url += `&sheet=${encodeURIComponent(sheetName)}`;
+            }
+
+            const timeout = setTimeout(() => {
+                cleanup();
+                reject(new Error('データ取得がタイムアウトしました'));
+            }, 15000);
+
+            function cleanup() {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                const el = document.getElementById(callbackName);
+                if (el) el.remove();
+            }
+
+            window[callbackName] = function(response) {
+                cleanup();
+                if (response.status === 'error') {
+                    reject(new Error(response.errors?.[0]?.detailed_message || 'データ取得エラー'));
+                } else {
+                    resolve(response.table);
+                }
+            };
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = url;
+            script.onerror = () => {
+                cleanup();
+                reject(new Error('スプレッドシートへの接続に失敗しました。共有設定を確認してください。'));
+            };
+            document.body.appendChild(script);
+        });
+    }
+
+    // =====================================================
+    // スタッフ名取得
+    // =====================================================
+    async function loadStaffNames(monthKey) {
+        if (cachedStaffNames[monthKey]) return cachedStaffNames[monthKey];
+
+        const spreadsheetId = SPREADSHEET_MAP[monthKey];
+        const table = await fetchSheetData(spreadsheetId, 'カレンダー');
+        const staffNames = [];
+        for (const col of table.cols) {
+            if (col.label && col.label.trim() && col.label.trim() !== '×') {
+                staffNames.push(col.label.trim());
+            }
+        }
+        cachedStaffNames[monthKey] = staffNames;
+        return staffNames;
+    }
+
+    // =====================================================
+    // シート名一覧取得（日付シート判定用）
+    // =====================================================
+    async function getAvailableDays(monthKey) {
+        // カレンダーシートのデータから日付を取得する
+        const spreadsheetId = SPREADSHEET_MAP[monthKey];
+        const table = await fetchSheetData(spreadsheetId, 'カレンダー');
+        const days = [];
+        for (const row of table.rows) {
+            if (row.c && row.c[0] && row.c[0].v) {
+                const dateStr = row.c[0].v;
+                const match = dateStr.match(/Date\((\d+),(\d+),(\d+)\)/);
+                if (match) {
+                    const month = parseInt(match[2]) + 1;
+                    const day = parseInt(match[3]);
+                    const dayLabel = row.c[0].f || `${month}/${day}`;
+                    days.push({
+                        month: month,
+                        day: day,
+                        sheetName: `${month}/${day}`,
+                        label: dayLabel
+                    });
+                }
+            }
+        }
+        return days;
+    }
+
+    // =====================================================
+    // 月変更時の処理（カレンダーモード）
+    // =====================================================
+    async function onMonthChange() {
+        const monthKey = document.getElementById('monthSelect').value;
+        const staffSel = document.getElementById('staffSelectCal');
+        staffSel.innerHTML = '<option value="">読み込み中...</option>';
+        document.getElementById('calendarResults').classList.remove('show');
+        hideError();
+
+        if (!monthKey) {
+            staffSel.innerHTML = '<option value="">-- 先に月を選択してください --</option>';
+            return;
+        }
+
+        try {
+            const names = await loadStaffNames(monthKey);
+            staffSel.innerHTML = '<option value="">-- スタッフを選択 --</option>';
+            names.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                staffSel.appendChild(opt);
+            });
+        } catch (err) {
+            showError(err.message);
+            staffSel.innerHTML = '<option value="">-- 読み込みエラー --</option>';
+        }
+    }
+
+    // =====================================================
+    // 月変更時の処理（タイムテーブルモード）
+    // =====================================================
+    async function onMonthChangeTT() {
+        const monthKey = document.getElementById('monthSelectTT').value;
+        const staffSel = document.getElementById('staffSelectTT');
+        const daySel = document.getElementById('daySelectTT');
+        staffSel.innerHTML = '<option value="">読み込み中...</option>';
+        daySel.innerHTML = '<option value="">読み込み中...</option>';
+        document.getElementById('timetableResults').classList.remove('show');
+        hideError();
+
+        if (!monthKey) {
+            staffSel.innerHTML = '<option value="">-- 先に月を選択してください --</option>';
+            daySel.innerHTML = '<option value="">-- 先に月を選択してください --</option>';
+            return;
+        }
+
+        try {
+            const [names, days] = await Promise.all([
+                loadStaffNames(monthKey),
+                getAvailableDays(monthKey)
+            ]);
+
+            staffSel.innerHTML = '<option value="">-- スタッフを選択 --</option>';
+            names.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                staffSel.appendChild(opt);
+            });
+
+            // Remove duplicates
+            const uniqueDays = [];
+            const seen = new Set();
+            for (const d of days) {
+                if (!seen.has(d.sheetName)) {
+                    seen.add(d.sheetName);
+                    uniqueDays.push(d);
+                }
+            }
+
+            daySel.innerHTML = '<option value="">-- 日を選択 --</option>';
+            uniqueDays.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.sheetName;
+                opt.textContent = d.label;
+                daySel.appendChild(opt);
+            });
+        } catch (err) {
+            showError(err.message);
+            staffSel.innerHTML = '<option value="">-- 読み込みエラー --</option>';
+            daySel.innerHTML = '<option value="">-- 読み込みエラー --</option>';
+        }
+    }
+
+    // =====================================================
+    // カレンダー検索
+    // =====================================================
+    async function searchCalendar() {
+        const monthKey = document.getElementById('monthSelect').value;
+        const staffName = document.getElementById('staffSelectCal').value;
+
+        if (!monthKey || !staffName) {
+            showError('月とスタッフ名を選択してください');
+            return;
+        }
+
+        showLoading();
+        hideError();
+        document.getElementById('calendarResults').classList.remove('show');
+
+        try {
+            const spreadsheetId = SPREADSHEET_MAP[monthKey];
+            const table = await fetchSheetData(spreadsheetId, 'カレンダー');
+
+            // スタッフの列インデックスを探す
+            let staffColIdx = -1;
+            for (let i = 0; i < table.cols.length; i++) {
+                if (table.cols[i].label && table.cols[i].label.trim() === staffName) {
+                    staffColIdx = i;
+                    break;
+                }
+            }
+
+            if (staffColIdx === -1) {
+                throw new Error(`${staffName} のデータが見つかりませんでした`);
+            }
+
+            // 日付と勤務データを抽出
+            const shiftData = [];
+            for (let r = 0; r < table.rows.length; r++) {
+                const row = table.rows[r];
+                if (row.c && row.c[0] && row.c[0].v) {
+                    const dateStr = row.c[0].v;
+                    const match = dateStr.match(/Date\((\d+),(\d+),(\d+)\)/);
+                    if (match) {
+                        const year = parseInt(match[1]);
+                        const month = parseInt(match[2]) + 1;
+                        const day = parseInt(match[3]);
+                        const date = new Date(year, month - 1, day);
+
+                        // 勤務値は現在の行と次の行にある（各日2行）
+                        const val1 = getCellValue(row, staffColIdx);
+                        const val2 = (r + 1 < table.rows.length) ? getCellValue(table.rows[r + 1], staffColIdx) : '';
+
+                        // 2つの行の値を統合
+                        let status = val1 || val2 || '';
+
+                        shiftData.push({
+                            date: date,
+                            year: year,
+                            month: month,
+                            day: day,
+                            dayOfWeek: date.getDay(),
+                            status: status
+                        });
+                    }
+                }
+            }
+
+            renderCalendarResults(staffName, monthKey, shiftData);
+        } catch (err) {
+            showError(err.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function getCellValue(row, idx) {
+        if (!row || !row.c || !row.c[idx]) return '';
+        const cell = row.c[idx];
+        if (cell.f) return cell.f;
+        if (cell.v !== null && cell.v !== undefined) return String(cell.v);
+        return '';
+    }
+
+    function getStatusClass(status) {
+        if (!status) return '';
+        const s = status.trim();
+        if (s.includes('公休')) return 'off';
+        if (s.includes('有給')) return 'paid';
+        if (s.includes('出張')) return 'trip';
+        if (s.startsWith('出') || s === 'オリ') return 'work';
+        if (s === '') return '';
+        return 'other-status';
+    }
+
+    function getStatusLabel(status) {
+        if (!status) return '';
+        return status.trim();
+    }
+
+    // =====================================================
+    // カレンダー結果描画
+    // =====================================================
+    function renderCalendarResults(staffName, monthKey, shiftData) {
+        if (shiftData.length === 0) {
+            showError('この月のシフトデータが見つかりませんでした');
+            return;
+        }
+
+        const firstDate = shiftData[0];
+        const monthLabel = MONTH_LABELS[monthKey] || monthKey;
+
+        // 統計
+        let workDays = 0, offDays = 0, paidDays = 0, otherDays = 0;
+        shiftData.forEach(d => {
+            const cls = getStatusClass(d.status);
+            if (cls === 'work') workDays++;
+            else if (cls === 'off') offDays++;
+            else if (cls === 'paid') paidDays++;
+            else if (d.status) otherDays++;
+        });
+
+        // HTMLを構築
+        let html = '<div class="card fade-in">';
+
+        // ヘッダー
+        html += `<div class="result-header">
+            <div class="result-avatar">${staffName.charAt(0)}</div>
+            <div class="result-info">
+                <h3>${staffName}</h3>
+                <p>${monthLabel} のシフト</p>
+            </div>
+        </div>`;
+
+        // 統計
+        html += `<div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value" style="color:var(--status-work)">${workDays}</div>
+                <div class="stat-label">出勤</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" style="color:var(--status-off)">${offDays}</div>
+                <div class="stat-label">公休</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" style="color:var(--status-paid)">${paidDays}</div>
+                <div class="stat-label">有給</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" style="color:var(--status-other)">${otherDays}</div>
+                <div class="stat-label">その他</div>
+            </div>
+        </div>`;
+
+        // カレンダーグリッド
+        const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+        html += '<div class="calendar-grid">';
+
+        // 曜日ヘッダー
+        dayNames.forEach((d, i) => {
+            const cls = i === 0 ? 'sun' : i === 6 ? 'sat' : '';
+            html += `<div class="cal-header ${cls}">${d}</div>`;
+        });
+
+        // 最初の日の曜日までの空セル
+        const startDow = shiftData[0].dayOfWeek;
+        for (let i = 0; i < startDow; i++) {
+            html += '<div class="cal-cell empty"></div>';
+        }
+
+        // 日毎のセル
+        shiftData.forEach(d => {
+            const cls = getStatusClass(d.status);
+            const label = getStatusLabel(d.status);
+            html += `<div class="cal-cell ${cls}">
+                <span class="cal-date">${d.day}</span>
+                <span class="cal-status">${label}</span>
+            </div>`;
+        });
+
+        html += '</div>';
+
+        // 凡例
+        html += `<div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-work)"></div>出勤</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-off)"></div>公休</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-paid)"></div>有給</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--status-trip)"></div>出張</div>
+        </div>`;
+
+        html += '</div>';
+
+        document.getElementById('calendarResults').innerHTML = html;
+        document.getElementById('calendarResults').classList.add('show');
+        document.getElementById('calendarResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // =====================================================
+    // タイムテーブル検索
+    // =====================================================
+    async function searchTimetable() {
+        const monthKey = document.getElementById('monthSelectTT').value;
+        const daySheet = document.getElementById('daySelectTT').value;
+        const staffName = document.getElementById('staffSelectTT').value;
+
+        if (!monthKey || !daySheet || !staffName) {
+            showError('月、日、スタッフ名をすべて選択してください');
+            return;
+        }
+
+        showLoading();
+        hideError();
+        document.getElementById('timetableResults').classList.remove('show');
+
+        try {
+            const spreadsheetId = SPREADSHEET_MAP[monthKey];
+            const table = await fetchSheetData(spreadsheetId, daySheet);
+
+            // Row 0 (最初の行) にスタッフ名がある
+            // スタッフ名の列インデックスを探す
+            let staffColIdx = -1;
+            const headerRow = table.rows[0];
+            if (headerRow && headerRow.c) {
+                for (let i = 0; i < headerRow.c.length; i++) {
+                    if (headerRow.c[i] && headerRow.c[i].v &&
+                        String(headerRow.c[i].v).trim() === staffName) {
+                        staffColIdx = i;
+                        break;
+                    }
+                }
+            }
+
+            if (staffColIdx === -1) {
+                throw new Error(`${staffName} のデータがこの日のシートに見つかりませんでした`);
+            }
+
+            // 2行目にはパターン名がある
+            let patternName = '';
+            const patternRow = table.rows[1];
+            if (patternRow && patternRow.c && patternRow.c[staffColIdx]) {
+                patternName = getCellValue(patternRow, staffColIdx);
+            }
+
+            // 勤務ステータス行（3行目付近）の取得
+            let dayStatus = '';
+            for (let r = 2; r <= 4 && r < table.rows.length; r++) {
+                const row = table.rows[r];
+                if (row && row.c && row.c[staffColIdx]) {
+                    const val = getCellValue(row, staffColIdx);
+                    if (val && (val.includes('出') || val.includes('公休') || val.includes('有給') || val.includes('出張'))) {
+                        dayStatus = val;
+                        break;
+                    }
+                }
+            }
+
+            // タイムテーブルデータを抽出
+            // H列（index 7）に時間が入っている
+            const timetableData = [];
+            for (let r = 0; r < table.rows.length; r++) {
+                const row = table.rows[r];
+                if (!row || !row.c) continue;
+
+                // H列 (index 7) の時間を確認
+                const timeCell = row.c[7];
+                if (!timeCell || !timeCell.v) continue;
+
+                const timeStr = timeCell.v;
+                const timeMatch = timeStr.match(/Date\(\d+,\d+,\d+,(\d+),(\d+),\d+\)/);
+                if (!timeMatch) continue;
+
+                const hour = parseInt(timeMatch[1]);
+                const minute = parseInt(timeMatch[2]);
+
+                // 5:30は準備時間なので7:00からを表示
+                if (hour < 6) continue;
+
+                const timeLabel = timeCell.f || `${hour}:${minute.toString().padStart(2, '0')}`;
+                const task = getCellValue(row, staffColIdx);
+
+                // B列(1)の業務カテゴリも取得
+                const category = getCellValue(row, 1);
+
+                timetableData.push({
+                    hour: hour,
+                    minute: minute,
+                    timeLabel: timeLabel,
+                    task: task,
+                    category: category
+                });
+            }
+
+            renderTimetableResults(staffName, daySheet, monthKey, patternName, dayStatus, timetableData);
+        } catch (err) {
+            showError(err.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // =====================================================
+    // タイムテーブル結果描画
+    // =====================================================
+    function renderTimetableResults(staffName, daySheet, monthKey, patternName, dayStatus, timetableData) {
+        const monthLabel = MONTH_LABELS[monthKey] || monthKey;
+
+        let html = '<div class="card fade-in">';
+
+        // ヘッダー
+        html += `<div class="result-header">
+            <div class="result-avatar">${staffName.charAt(0)}</div>
+            <div class="result-info">
+                <h3>${staffName}</h3>
+                <p>${daySheet} のタイムテーブル</p>
+            </div>
+        </div>`;
+
+        // 勤務ステータス
+        if (dayStatus) {
+            const statusCls = getStatusClass(dayStatus);
+            html += `<div class="day-status-info">
+                <div class="day-status-chip ${statusCls}">
+                    ${statusCls === 'work' ? '✅' : statusCls === 'off' ? '🔴' : statusCls === 'paid' ? '🟡' : '📌'}
+                    ${dayStatus}
+                </div>
+            </div>`;
+        }
+
+        // パターン名
+        if (patternName && patternName !== 'ー') {
+            html += `<div class="pattern-info">
+                <span class="label">勤務パターン:</span>
+                <span class="value">${patternName}</span>
+            </div>`;
+        }
+
+        if (dayStatus && (dayStatus.includes('公休') || dayStatus.includes('有給')) && timetableData.every(t => !t.task)) {
+            html += `<div style="text-align:center; padding:30px 0; color:var(--text-muted);">
+                <span style="font-size:48px;">🏖️</span>
+                <p style="margin-top:12px; font-size:15px;">この日はお休みです</p>
+            </div>`;
+        } else {
+            // タイムテーブル
+            html += '<div class="timetable">';
+            timetableData.forEach(t => {
+                const hasTask = t.task && t.task.trim() !== '';
+                html += `<div class="tt-row ${hasTask ? 'has-task' : 'no-task'}">
+                    <div class="tt-time">${t.timeLabel}</div>
+                    <div class="tt-task">
+                        ${hasTask
+                            ? `<span class="tt-task-badge">${t.task}</span>`
+                            : '<span style="opacity:0.3">—</span>'}
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+        }
+
+        html += '</div>';
+
+        document.getElementById('timetableResults').innerHTML = html;
+        document.getElementById('timetableResults').classList.add('show');
+        document.getElementById('timetableResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // =====================================================
+    // UI ヘルパー
+    // =====================================================
+    function showLoading() {
+        document.getElementById('loading').classList.add('show');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').classList.remove('show');
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = '⚠️ ' + msg;
+        el.classList.add('show');
+    }
+
+    function hideError() {
+        document.getElementById('errorMsg').classList.remove('show');
+    }
+
+    // 初期化実行
+    init();
+    </script>
+</body>
+</html>
