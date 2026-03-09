@@ -192,8 +192,7 @@
             margin-bottom: 8px;
         }
 
-        .form-select,
-        .form-input {
+        .form-select {
             width: 100%;
             padding: 12px 16px;
             background: var(--bg-glass);
@@ -206,17 +205,13 @@
             transition: all 0.3s;
             appearance: none;
             -webkit-appearance: none;
-        }
-
-        .form-select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 16px center;
             padding-right: 40px;
         }
 
-        .form-select:focus,
-        .form-input:focus {
+        .form-select:focus {
             border-color: var(--accent-blue);
             box-shadow: 0 0 0 3px var(--accent-blue-glow);
         }
@@ -224,16 +219,6 @@
         .form-select option {
             background: var(--bg-secondary);
             color: var(--text-primary);
-        }
-
-        .month-display {
-            padding: 12px 16px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: var(--radius-sm);
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--accent-blue);
         }
 
         .search-btn {
@@ -383,99 +368,124 @@
             aspect-ratio: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            align-items: stretch;
             border-radius: 8px;
             font-size: 12px;
             position: relative;
-            min-height: 48px;
+            min-height: 56px;
             transition: all 0.2s;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .cal-cell.empty {
             background: transparent;
+            border: none;
         }
 
         .cal-date {
-            font-size: 12px;
-            font-weight: 500;
-            margin-bottom: 2px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            padding: 2px 0 1px;
+            line-height: 1;
+            flex-shrink: 0;
         }
 
-        .cal-status {
-            font-size: 9px;
+        /* 午前/午後の各半分 */
+        .cal-half {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7px;
             font-weight: 600;
-            padding: 1px 4px;
-            border-radius: 3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 100%;
+            padding: 0 2px;
+            line-height: 1.2;
         }
 
-        .cal-cell.work {
+        .cal-half-am {
+            border-radius: 0;
+        }
+
+        .cal-half-pm {
+            border-radius: 0;
+        }
+
+        /* ステータス背景色と文字色 */
+        .cal-half.s-work {
             background: var(--status-work-bg);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .cal-cell.work .cal-date {
             color: var(--status-work);
         }
 
-        .cal-cell.work .cal-status {
-            color: var(--status-work);
-        }
-
-        .cal-cell.off {
+        .cal-half.s-off {
             background: var(--status-off-bg);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .cal-cell.off .cal-date {
             color: var(--status-off);
         }
 
-        .cal-cell.off .cal-status {
-            color: var(--status-off);
-        }
-
-        .cal-cell.paid {
+        .cal-half.s-paid {
             background: var(--status-paid-bg);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-
-        .cal-cell.paid .cal-date {
             color: var(--status-paid);
         }
 
-        .cal-cell.paid .cal-status {
-            color: var(--status-paid);
-        }
-
-        .cal-cell.trip {
+        .cal-half.s-trip {
             background: var(--status-trip-bg);
-            border: 1px solid rgba(139, 92, 246, 0.2);
-        }
-
-        .cal-cell.trip .cal-date {
             color: var(--status-trip);
         }
 
-        .cal-cell.trip .cal-status {
-            color: var(--status-trip);
-        }
-
-        .cal-cell.other-status {
+        .cal-half.s-other {
             background: var(--status-other-bg);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-
-        .cal-cell.other-status .cal-date {
             color: var(--status-other);
         }
 
-        .cal-cell.other-status .cal-status {
+        .cal-half.s-none {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* 日付部分の色: AM/PM両方のステータスで最も優先度の高いものを使用 */
+        .cal-cell.d-work .cal-date {
+            color: var(--status-work);
+        }
+
+        .cal-cell.d-off .cal-date {
+            color: var(--status-off);
+        }
+
+        .cal-cell.d-paid .cal-date {
+            color: var(--status-paid);
+        }
+
+        .cal-cell.d-trip .cal-date {
+            color: var(--status-trip);
+        }
+
+        .cal-cell.d-other .cal-date {
             color: var(--status-other);
+        }
+
+        .cal-cell.d-none .cal-date {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* AM/PMが同じステータスの場合、ボーダーを追加 */
+        .cal-cell.d-work {
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        .cal-cell.d-off {
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .cal-cell.d-paid {
+            border-color: rgba(245, 158, 11, 0.25);
+        }
+
+        .cal-cell.d-trip {
+            border-color: rgba(139, 92, 246, 0.25);
         }
 
         .stats-row {
@@ -689,7 +699,7 @@
             }
 
             .cal-status {
-                font-size: 8px;
+                font-size: 7px;
             }
 
             .stats-row {
@@ -707,10 +717,6 @@
                 padding: 8px 12px;
                 font-size: 13px;
             }
-        }
-
-        input[type="date"] {
-            color-scheme: dark;
         }
     </style>
 </head>
@@ -799,13 +805,15 @@
         };
 
         let currentMode = 'calendar';
-        let cachedStaffNames = {};  // monthKey -> names
-        let cachedDays = {};        // monthKey -> days
+        let cachedCalendarMeta = {};   // monthKey -> table(デフォルト、cols.labelあり)
+        let cachedCalendarRaw = {};    // monthKey -> table(headers=0、全データstring)
+        let cachedStaffInfo = {};      // monthKey -> { names: [], colMap: {} }
+        let cachedDays = {};           // monthKey -> days[]
 
         // =====================================================
-        // 初期化 - 月ドロップダウンを設定
+        // 初期化（2つのonMonthChangeを順番に実行）
         // =====================================================
-        function init() {
+        async function init() {
             const keys = Object.keys(SPREADSHEET_MAP);
             ['monthSelect', 'monthSelectTT'].forEach(id => {
                 const sel = document.getElementById(id);
@@ -816,76 +824,23 @@
                     opt.textContent = MONTH_LABELS[key] || key;
                     sel.appendChild(opt);
                 });
-                // 最新月を自動選択
                 sel.value = keys[keys.length - 1];
             });
-            // 最新月のデータを自動読み込み
-            onMonthChange('calendar');
-            onMonthChange('timetable');
-        }
-
-        // =====================================================
-        // 月変更時の処理
-        // =====================================================
-        async function onMonthChange(mode) {
-            const monthKey = mode === 'calendar'
-                ? document.getElementById('monthSelect').value
-                : document.getElementById('monthSelectTT').value;
-
-            hideError();
-            if (mode === 'calendar') {
-                document.getElementById('calendarResults').classList.remove('show');
-                const staffSel = document.getElementById('staffSelectCal');
-                staffSel.innerHTML = '<option value="">読み込み中...</option>';
-                if (!monthKey) { staffSel.innerHTML = '<option value="">-- 先に月を選択してください --</option>'; return; }
-                try {
-                    const names = await loadStaffNames(monthKey);
-                    staffSel.innerHTML = '<option value="">-- スタッフを選択 --</option>';
-                    names.forEach(name => { const o = document.createElement('option'); o.value = name; o.textContent = name; staffSel.appendChild(o); });
-                } catch (err) { showError(err.message); staffSel.innerHTML = '<option value="">-- 読み込みエラー --</option>'; }
-            } else {
-                document.getElementById('timetableResults').classList.remove('show');
-                const staffSel = document.getElementById('staffSelectTT');
-                const daySel = document.getElementById('daySelectTT');
-                staffSel.innerHTML = '<option value="">読み込み中...</option>';
-                daySel.innerHTML = '<option value="">読み込み中...</option>';
-                if (!monthKey) {
-                    staffSel.innerHTML = '<option value="">-- 先に月を選択してください --</option>';
-                    daySel.innerHTML = '<option value="">-- 先に月を選択してください --</option>';
-                    return;
-                }
-                try {
-                    const [names, days] = await Promise.all([loadStaffNames(monthKey), getAvailableDays(monthKey)]);
-                    staffSel.innerHTML = '<option value="">-- スタッフを選択 --</option>';
-                    names.forEach(name => { const o = document.createElement('option'); o.value = name; o.textContent = name; staffSel.appendChild(o); });
-                    daySel.innerHTML = '<option value="">-- 日を選択 --</option>';
-                    days.forEach(d => { const o = document.createElement('option'); o.value = d.sheetName; o.textContent = d.label; daySel.appendChild(o); });
-                } catch (err) { showError(err.message); staffSel.innerHTML = '<option value="">-- 読み込みエラー --</option>'; daySel.innerHTML = '<option value="">-- 読み込みエラー --</option>'; }
-            }
-        }
-
-        // =====================================================
-        // モード切替
-        // =====================================================
-        function switchMode(mode) {
-            currentMode = mode;
-            document.getElementById('calendarModeBtn').classList.toggle('active', mode === 'calendar');
-            document.getElementById('timetableModeBtn').classList.toggle('active', mode === 'timetable');
-            document.getElementById('calendarInput').style.display = mode === 'calendar' ? 'block' : 'none';
-            document.getElementById('timetableInput').style.display = mode === 'timetable' ? 'block' : 'none';
-            document.getElementById('calendarResults').classList.remove('show');
-            document.getElementById('timetableResults').classList.remove('show');
-            hideError();
+            await onMonthChange('calendar');
+            await onMonthChange('timetable');
         }
 
         // =====================================================
         // Google Sheets API (gviz) データ取得
+        // headers0=true の場合、&headers=0 を付加して全列をstring型で取得
+        // （number型列で文字列が消える問題を回避）
         // =====================================================
-        function fetchSheetData(spreadsheetId, sheetName) {
+        function fetchSheetData(spreadsheetId, sheetName, headers0) {
             return new Promise((resolve, reject) => {
                 const callbackName = 'gvizCb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                 let url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:json;responseHandler:${callbackName}`;
                 if (sheetName) url += `&sheet=${encodeURIComponent(sheetName)}`;
+                if (headers0) url += `&headers=0`;
 
                 const timeout = setTimeout(() => { cleanup(); reject(new Error('データ取得がタイムアウトしました')); }, 15000);
 
@@ -911,32 +866,94 @@
         }
 
         // =====================================================
-        // スタッフ名取得（月別キャッシュ）
+        // カレンダーメタデータ取得（デフォルト＝cols.labelにスタッフ名が入る）
+        // Promise キャッシュで重複リクエストを防止
         // =====================================================
-        async function loadStaffNames(monthKey) {
-            if (cachedStaffNames[monthKey]) return cachedStaffNames[monthKey];
-            const table = await fetchSheetData(SPREADSHEET_MAP[monthKey], 'カレンダー');
-            const staffNames = [];
-            for (const col of table.cols) {
-                if (col.label && col.label.trim() && col.label.trim() !== '×') {
-                    staffNames.push(col.label.trim());
-                }
-            }
-            cachedStaffNames[monthKey] = staffNames;
-            return staffNames;
+        let pendingCalendarMeta = {};
+        async function getCalendarMeta(monthKey) {
+            if (cachedCalendarMeta[monthKey]) return cachedCalendarMeta[monthKey];
+            if (pendingCalendarMeta[monthKey]) return pendingCalendarMeta[monthKey];
+            pendingCalendarMeta[monthKey] = fetchSheetData(SPREADSHEET_MAP[monthKey], 'カレンダー', false).then(table => {
+                cachedCalendarMeta[monthKey] = table;
+                delete pendingCalendarMeta[monthKey];
+                return table;
+            });
+            return pendingCalendarMeta[monthKey];
         }
 
         // =====================================================
-        // 日付リスト取得（月別キャッシュ）
+        // カレンダー生データ取得（headers=0＝全列string, シフト値が消えない）
+        // Promise キャッシュで重複リクエストを防止
+        // =====================================================
+        let pendingCalendarRaw = {};
+        async function getCalendarRaw(monthKey) {
+            if (cachedCalendarRaw[monthKey]) return cachedCalendarRaw[monthKey];
+            if (pendingCalendarRaw[monthKey]) return pendingCalendarRaw[monthKey];
+            pendingCalendarRaw[monthKey] = fetchSheetData(SPREADSHEET_MAP[monthKey], 'カレンダー', true).then(table => {
+                cachedCalendarRaw[monthKey] = table;
+                delete pendingCalendarRaw[monthKey];
+                return table;
+            });
+            return pendingCalendarRaw[monthKey];
+        }
+
+        // =====================================================
+        // スタッフ名とカラムインデックスのマッピングを構築
+        // デフォルトAPI → cols.label からスタッフ名を取得
+        // =====================================================
+        async function getStaffInfo(monthKey) {
+            if (cachedStaffInfo[monthKey]) return cachedStaffInfo[monthKey];
+            const meta = await getCalendarMeta(monthKey);
+
+            const colMap = {};  // staffName -> colIndex
+            const names = [];
+
+            // cols.label から取得
+            for (let i = 0; i < meta.cols.length; i++) {
+                const raw = meta.cols[i].label;
+                if (!raw) continue;
+                const label = raw.trim();
+                if (!label || label === '×') continue;
+                if (!colMap[label]) {
+                    colMap[label] = i;
+                    names.push(label);
+                }
+            }
+
+            // ソート
+            names.sort((a, b) => a.localeCompare(b, 'ja'));
+
+            const info = { names, colMap };
+            cachedStaffInfo[monthKey] = info;
+            return info;
+        }
+
+        // =====================================================
+        // 日付リスト取得
         // =====================================================
         async function getAvailableDays(monthKey) {
             if (cachedDays[monthKey]) return cachedDays[monthKey];
-            const table = await fetchSheetData(SPREADSHEET_MAP[monthKey], 'カレンダー');
+            const table = await getCalendarRaw(monthKey);
             const days = [];
             const seen = new Set();
             for (const row of table.rows) {
                 if (row.c && row.c[0] && row.c[0].v) {
-                    const match = row.c[0].v.match(/Date\((\d+),(\d+),(\d+)\)/);
+                    const val = String(row.c[0].v);
+                    let match = val.match(/Date\((\d+),(\d+),(\d+)\)/);
+                    if (!match && row.c[0].f) {
+                        // fフィールドから日付を抽出試行
+                        const fMatch = row.c[0].f.match(/(\d+)\/(\d+)/);
+                        if (fMatch) {
+                            const month = parseInt(fMatch[1]);
+                            const day = parseInt(fMatch[2]);
+                            const sheetName = `${month}/${day}`;
+                            if (!seen.has(sheetName)) {
+                                seen.add(sheetName);
+                                days.push({ sheetName, label: row.c[0].f });
+                            }
+                            continue;
+                        }
+                    }
                     if (match) {
                         const month = parseInt(match[2]) + 1;
                         const day = parseInt(match[3]);
@@ -953,53 +970,64 @@
         }
 
         // =====================================================
-        // カレンダー検索（午前/午後2行対応）
+        // 月変更時
         // =====================================================
-        async function searchCalendar() {
-            const monthKey = document.getElementById('monthSelect').value;
-            const staffName = document.getElementById('staffSelectCal').value;
-            if (!monthKey) { showError('月を選択してください'); return; }
-            if (!staffName) { showError('スタッフ名を選択してください'); return; }
+        async function onMonthChange(mode) {
+            const monthKey = mode === 'calendar'
+                ? document.getElementById('monthSelect').value
+                : document.getElementById('monthSelectTT').value;
 
-            showLoading(); hideError();
-            document.getElementById('calendarResults').classList.remove('show');
-
-            try {
-                const table = await fetchSheetData(SPREADSHEET_MAP[monthKey], 'カレンダー');
-                let staffColIdx = -1;
-                for (let i = 0; i < table.cols.length; i++) {
-                    if (table.cols[i].label && table.cols[i].label.trim() === staffName) { staffColIdx = i; break; }
+            hideError();
+            if (mode === 'calendar') {
+                document.getElementById('calendarResults').classList.remove('show');
+                const staffSel = document.getElementById('staffSelectCal');
+                if (!monthKey) { staffSel.innerHTML = '<option value="">-- 先に月を選択してください --</option>'; return; }
+                staffSel.innerHTML = '<option value="">読み込み中...</option>';
+                try {
+                    const info = await getStaffInfo(monthKey);
+                    staffSel.innerHTML = '<option value="">-- スタッフを選択 --</option>';
+                    info.names.forEach(name => { const o = document.createElement('option'); o.value = name; o.textContent = name; staffSel.appendChild(o); });
+                } catch (err) { showError(err.message); staffSel.innerHTML = '<option value="">-- 読み込みエラー --</option>'; }
+            } else {
+                document.getElementById('timetableResults').classList.remove('show');
+                const staffSel = document.getElementById('staffSelectTT');
+                const daySel = document.getElementById('daySelectTT');
+                if (!monthKey) {
+                    staffSel.innerHTML = '<option value="">-- 先に月を選択してください --</option>';
+                    daySel.innerHTML = '<option value="">-- 先に月を選択してください --</option>';
+                    return;
                 }
-                if (staffColIdx === -1) throw new Error(`${staffName} のデータが見つかりませんでした`);
-
-                // 各日は2行構成（午前行・午後行）
-                const shiftData = [];
-                for (let r = 0; r < table.rows.length; r++) {
-                    const row = table.rows[r];
-                    if (row.c && row.c[0] && row.c[0].v) {
-                        const match = row.c[0].v.match(/Date\((\d+),(\d+),(\d+)\)/);
-                        if (match) {
-                            const year = parseInt(match[1]), month = parseInt(match[2]) + 1, day = parseInt(match[3]);
-                            const date = new Date(year, month - 1, day);
-                            const val1 = getCellValue(row, staffColIdx);    // 午前（上段）
-                            const val2 = (r + 1 < table.rows.length) ? getCellValue(table.rows[r + 1], staffColIdx) : '';  // 午後（下段）
-                            shiftData.push({
-                                date, year, month, day,
-                                dayOfWeek: date.getDay(),
-                                statusAM: val1,   // 午前の値
-                                statusPM: val2,   // 午後の値
-                                status: val1 || val2 || ''  // 統合値（統計用）
-                            });
-                        }
-                    }
-                }
-                renderCalendarResults(staffName, monthKey, shiftData);
-            } catch (err) { showError(err.message); }
-            finally { hideLoading(); }
+                staffSel.innerHTML = '<option value="">読み込み中...</option>';
+                daySel.innerHTML = '<option value="">読み込み中...</option>';
+                try {
+                    const [info, days] = await Promise.all([getStaffInfo(monthKey), getAvailableDays(monthKey)]);
+                    staffSel.innerHTML = '<option value="">-- スタッフを選択 --</option>';
+                    info.names.forEach(name => { const o = document.createElement('option'); o.value = name; o.textContent = name; staffSel.appendChild(o); });
+                    daySel.innerHTML = '<option value="">-- 日を選択 --</option>';
+                    days.forEach(d => { const o = document.createElement('option'); o.value = d.sheetName; o.textContent = d.label; daySel.appendChild(o); });
+                } catch (err) { showError(err.message); }
+            }
         }
 
+        // =====================================================
+        // モード切替
+        // =====================================================
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('calendarModeBtn').classList.toggle('active', mode === 'calendar');
+            document.getElementById('timetableModeBtn').classList.toggle('active', mode === 'timetable');
+            document.getElementById('calendarInput').style.display = mode === 'calendar' ? 'block' : 'none';
+            document.getElementById('timetableInput').style.display = mode === 'timetable' ? 'block' : 'none';
+            document.getElementById('calendarResults').classList.remove('show');
+            document.getElementById('timetableResults').classList.remove('show');
+            hideError();
+        }
+
+        // =====================================================
+        // セル値取得ヘルパー
+        // =====================================================
         function getCellValue(row, idx) {
-            if (!row || !row.c || !row.c[idx]) return '';
+            if (!row || !row.c || idx >= row.c.length || !row.c[idx]) return '';
             const cell = row.c[idx];
             if (cell.f) return cell.f;
             if (cell.v !== null && cell.v !== undefined) return String(cell.v);
@@ -1018,7 +1046,54 @@
         }
 
         // =====================================================
-        // カレンダー結果描画（午前/午後2段表示対応）
+        // カレンダー検索
+        // =====================================================
+        async function searchCalendar() {
+            const monthKey = document.getElementById('monthSelect').value;
+            const staffName = document.getElementById('staffSelectCal').value;
+            if (!monthKey) { showError('月を選択してください'); return; }
+            if (!staffName) { showError('スタッフ名を選択してください'); return; }
+
+            showLoading(); hideError();
+            document.getElementById('calendarResults').classList.remove('show');
+
+            try {
+                // headers=0 のデータを使用（number型列の文字列が消えない）
+                const table = await getCalendarRaw(monthKey);
+                const info = await getStaffInfo(monthKey);
+                const staffColIdx = info.colMap[staffName];
+
+                if (staffColIdx === undefined) throw new Error(`${staffName} のデータが見つかりませんでした`);
+
+                // 各日は2行構成（午前行・午後行）
+                const shiftData = [];
+                for (let r = 0; r < table.rows.length; r++) {
+                    const row = table.rows[r];
+                    if (row.c && row.c[0] && row.c[0].v) {
+                        const val = String(row.c[0].v);
+                        const match = val.match(/Date\((\d+),(\d+),(\d+)\)/);
+                        if (match) {
+                            const year = parseInt(match[1]), month = parseInt(match[2]) + 1, day = parseInt(match[3]);
+                            const date = new Date(year, month - 1, day);
+                            const val1 = getCellValue(row, staffColIdx);
+                            const val2 = (r + 1 < table.rows.length) ? getCellValue(table.rows[r + 1], staffColIdx) : '';
+                            shiftData.push({
+                                date, year, month, day,
+                                dayOfWeek: date.getDay(),
+                                statusAM: val1,
+                                statusPM: val2,
+                                status: val1 || val2 || ''
+                            });
+                        }
+                    }
+                }
+                renderCalendarResults(staffName, monthKey, shiftData);
+            } catch (err) { showError(err.message); }
+            finally { hideLoading(); }
+        }
+
+        // =====================================================
+        // カレンダー結果描画（常に午前/午後2段表示）
         // =====================================================
         function renderCalendarResults(staffName, monthKey, shiftData) {
             if (!shiftData.length) { showError('シフトデータが見つかりませんでした'); return; }
@@ -1051,21 +1126,19 @@
             for (let i = 0; i < shiftData[0].dayOfWeek; i++) html += '<div class="cal-cell empty"></div>';
 
             shiftData.forEach(d => {
-                // 常に午前/午後の2段表示
                 const am = d.statusAM ? d.statusAM.trim() : '';
                 const pm = d.statusPM ? d.statusPM.trim() : '';
                 const clsAM = getStatusClass(am);
                 const clsPM = getStatusClass(pm);
-                // セル全体の色: 出勤を優先、なければ他のステータス
-                const mainCls = clsAM === 'work' || clsPM === 'work' ? 'work'
-                    : clsAM === 'off' || clsPM === 'off' ? 'off'
-                        : clsAM === 'paid' || clsPM === 'paid' ? 'paid'
-                            : clsAM === 'trip' || clsPM === 'trip' ? 'trip'
-                                : clsAM || clsPM || '';
-                html += `<div class="cal-cell ${mainCls}">
-                    <span class="cal-date">${d.day}</span>
-                    <span class="cal-status" style="font-size:7px;line-height:1.3">${am || '—'}<br>${pm || '—'}</span>
-                </div>`;
+                // 日付部分の色: 出勤 > 公休 > 有給 > 出張 > その他
+                const dateCls = clsAM || clsPM || 'none';
+                const sAM = clsAM ? 's-' + clsAM : 's-none';
+                const sPM = clsPM ? 's-' + clsPM : 's-none';
+                html += `<div class="cal-cell d-${dateCls}">
+                <span class="cal-date">${d.day}</span>
+                <div class="cal-half cal-half-am ${sAM}">${am || '—'}</div>
+                <div class="cal-half cal-half-pm ${sPM}">${pm || '—'}</div>
+            </div>`;
             });
             html += '</div>';
             html += `<div class="legend">
@@ -1095,32 +1168,72 @@
 
             try {
                 const table = await fetchSheetData(SPREADSHEET_MAP[monthKey], daySheet);
+
+                // タイムテーブルシートではスタッフ名はデータ行のrow[0]にある
                 let staffColIdx = -1;
-                const headerRow = table.rows[0];
-                if (headerRow && headerRow.c) {
-                    for (let i = 0; i < headerRow.c.length; i++) {
-                        if (headerRow.c[i] && headerRow.c[i].v && String(headerRow.c[i].v).trim() === staffName) { staffColIdx = i; break; }
+                // cols.labelをチェック
+                for (let i = 0; i < table.cols.length; i++) {
+                    if (table.cols[i].label && table.cols[i].label.trim() === staffName) {
+                        staffColIdx = i;
+                        break;
+                    }
+                }
+                // データ行もチェック
+                if (staffColIdx === -1) {
+                    for (let r = 0; r < Math.min(5, table.rows.length); r++) {
+                        const row = table.rows[r];
+                        if (!row || !row.c) continue;
+                        for (let i = 0; i < row.c.length; i++) {
+                            const cell = row.c[i];
+                            if (!cell) continue;
+                            const v = cell.f || (cell.v !== null ? String(cell.v) : '');
+                            if (v.trim() === staffName) {
+                                staffColIdx = i;
+                                break;
+                            }
+                        }
+                        if (staffColIdx !== -1) break;
                     }
                 }
                 if (staffColIdx === -1) throw new Error(`${staffName} のデータがこの日のシートに見つかりませんでした`);
 
                 let patternName = '';
-                const patternRow = table.rows[1];
-                if (patternRow && patternRow.c && patternRow.c[staffColIdx]) patternName = getCellValue(patternRow, staffColIdx);
+                // パターン名は最初の数行のどこかにある
+                for (let r = 0; r < Math.min(5, table.rows.length); r++) {
+                    const val = getCellValue(table.rows[r], staffColIdx);
+                    if (val && !val.includes('出') && !val.includes('公休') && !val.includes('有給') &&
+                        val !== staffName && val.length <= 10 && !/Date\(/.test(val)) {
+                        patternName = val;
+                        break;
+                    }
+                }
 
                 let dayStatus = '';
-                for (let r = 2; r <= 4 && r < table.rows.length; r++) {
+                for (let r = 0; r < Math.min(8, table.rows.length); r++) {
                     const val = getCellValue(table.rows[r], staffColIdx);
-                    if (val && (val.includes('出') || val.includes('公休') || val.includes('有給') || val.includes('出張'))) { dayStatus = val; break; }
+                    if (val && (val.includes('出') || val.includes('公休') || val.includes('有給') || val.includes('出張'))) {
+                        dayStatus = val;
+                        break;
+                    }
                 }
 
                 const timetableData = [];
                 for (let r = 0; r < table.rows.length; r++) {
                     const row = table.rows[r];
                     if (!row || !row.c) continue;
-                    const timeCell = row.c[7];
+                    // 時間列を探す（固定列7ではなく動的に検索）
+                    let timeCell = null;
+                    for (let c = 0; c < row.c.length; c++) {
+                        if (row.c[c] && row.c[c].v) {
+                            const v = String(row.c[c].v);
+                            if (v.match(/Date\(\d+,\d+,\d+,\d+,\d+,\d+\)/)) {
+                                timeCell = row.c[c];
+                                break;
+                            }
+                        }
+                    }
                     if (!timeCell || !timeCell.v) continue;
-                    const timeMatch = timeCell.v.match(/Date\(\d+,\d+,\d+,(\d+),(\d+),\d+\)/);
+                    const timeMatch = String(timeCell.v).match(/Date\(\d+,\d+,\d+,(\d+),(\d+),\d+\)/);
                     if (!timeMatch) continue;
                     const hour = parseInt(timeMatch[1]);
                     if (hour < 6) continue;
